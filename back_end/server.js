@@ -48,7 +48,6 @@ app.post('/forgot-password', async (req, res) => {
     user.resetToken = token;
     user.resetTokenExpiration = Date.now() + 3600000; // Token valid for 1 hour
     await user.save();
-
     // Send email
     const transporter = nodemailer.createTransport({
       service: 'Gmail',
@@ -57,17 +56,20 @@ app.post('/forgot-password', async (req, res) => {
         pass: process.env.PASSWORD,
       },
     });
+
+    console.log(transporter)
+    
     const resetLink = `http://localhost:3000/reset-password/${token}`;
-    await transporter.sendMail({
+    const frompart = await transporter.sendMail({
       from: process.env.EMAIL,
       to: email,
       subject: 'Password Reset',
       html: `<p>You requested a password reset. Click <a href="${resetLink}">here</a> to reset your password.</p>`,
     });
-
+    
     res.send('Reset link sent to your email.');
   } catch (err) {
-    res.status(500).send('Error occurred.');
+    res.status(500).send(err.message);
   }
 });
 
