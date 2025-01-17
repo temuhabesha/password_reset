@@ -5,14 +5,20 @@ const mongoose = require('mongoose');
 const nodemailer = require('nodemailer');
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
+const cors = require ('cors')
 require('dotenv').config();
 // importing module ending diractory
 
 const app = express();
 app.use(bodyParser.json());
+app.use(cors())
 
 // Connect to MongoDB
-mongoose.connect('mongodb://localhost:27017/usersDB', { useNewUrlParser: true, useUnifiedTopology: true });
+const db_connection = mongoose.connect('mongodb://localhost:27017/usersDB', {});
+
+if(!db_connection){
+  console.log('not connected successfully')
+}
 
 // User schema
 const userSchema = new mongoose.Schema({
@@ -27,6 +33,10 @@ const User = mongoose.model('User', userSchema);
 // Generate and send reset link
 app.post('/forgot-password', async (req, res) => {
   const { email } = req.body;
+
+  if(!email){
+    return res.status(400).send('please enter all fields')
+  }
 
   try {
     const user = await User.findOne({ email });
@@ -60,6 +70,9 @@ app.post('/forgot-password', async (req, res) => {
     res.status(500).send('Error occurred.');
   }
 });
+
+
+
 // Reset password
 app.post('/reset-password/:token', async (req, res) => {
   const { token } = req.params;
